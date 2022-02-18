@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Res } from '@nestjs/common';
 import { DbRepository } from 'src/Database/db.repositery';
 
 @Injectable()
@@ -10,7 +10,7 @@ export class PersonService {
     return userInfo;
   }
   /*this funcion return User's Id */
-  async findUserId(email: string) {
+  async findByUserId(email: string) {
     let userId = await this.dbRepository.findUserId(email);
     return userId;
   }
@@ -33,4 +33,8 @@ export class PersonService {
     let bill = this.dbRepository.genrateBill(userId, prodId);
     return bill;
   }
+  // for Cookies
+  // generateCookie(cookieName,token){
+  //   return cookie(cookieName,token,{ httpOnly: true })
+  // }
 }

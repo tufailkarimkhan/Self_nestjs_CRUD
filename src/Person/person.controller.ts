@@ -2,12 +2,11 @@ import {
   BadRequestException,
   Body,
   Controller,
-  Get,
-  Header,
   NotFoundException,
   Post,
   Req,
   Res,
+  UseGuards,
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
@@ -20,12 +19,15 @@ import {
 } from 'src/dto/person.dto';
 import { PersonService } from './person.service';
 import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
+
+import { AuthService } from 'src/auth/service/auth.service';
+import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
+import { LocalAuthGuard } from 'src/auth/guards/local-auth';
 @Controller()
 export class PersonController {
   constructor(
     public personService: PersonService,
-    private jwtService: JwtService,
+    private authService: AuthService, // private jwtService: JwtService,
   ) {}
   /*Here i defined authentication function */
   auth() {}
@@ -36,35 +38,42 @@ export class PersonController {
     password = encryptpass;
     return await this.personService.register(name, age, email, password);
   }
+
   /*this route for login */
+  @UseGuards(LocalAuthGuard)
   @Post('/login')
   async getUseId(
     @Body() { email, password }: LoginDto,
     @Res({ passthrough: true }) res,
   ) {
-    let personID = await this.personService.findUserId(email);
+    let personID = await this.personService.findByUserId(email);
     if (!personID.email) {
       throw new BadRequestException({ message: `Invalid Email` });
     }
-
     let comparePass = await bcrypt.compare(password, personID.password);
-    console.log(comparePass);
+
     if (!comparePass) {
       throw new BadRequestException({ message: `Invalid Password` });
     }
-    const jwtToken = await this.jwtService.signAsync({ id: personID._id });
-    res.cookie('jwtCookie', jwtToken, { httpOnly: true });
-    return { message: `you are Successfully Login 😀` };
+    // let jwtToken = await this.authService.login({ id: personID._id });
+
+    // console.log(jwtToken);
+
+    // res.cookie('jwtCookie', jwtToken, { httpOnly: true });
+    res.status(200).json({ message: `you are Successfully Login 😀` });
   }
+
   /*LogOut route */
+  @UseGuards()
   @Post('/logout')
   async logout(@Res({ passthrough: true }) res) {
-    res.clearCookie('jwtCookie');
+    // res.clearCookie('jwtCookie');
     return {
       message: `Logout Successfully ✔`,
     };
   }
   /*here we are store  product data into database*/
+  @UseGuards(JwtAuthGuard)
   @Post('/product')
   async product(
     @Body() { title, productName, price }: ProductDto,
@@ -79,13 +88,13 @@ export class PersonController {
         productName,
         price,
       );
-      try {
-        const cookie = req.cookies['jwtCookie'];
-        data = await this.jwtService.verifyAsync(cookie);
-        console.log(data);
-      } catch (err) {
-        res.json({ error: 'Please Login for Access' });
-      }
+      // try {
+      //   const cookie = req.cookies['jwtCookie'];
+      //   data = await this.jwtService.verifyAsync(cookie);
+      //   console.log(data);
+      // } catch (err) {
+      //   res.status(401).json({ error: 'Please Login for Access' });
+      // }
       console.log(productInfo);
       res.status(200).json({ Message: 'Product Added SuccessFully' });
     } catch (err) {
@@ -95,7 +104,7 @@ export class PersonController {
   @Post('/bill')
   async generateBill(@Body() { productName, email }: generateBill, @Res() res) {
     try {
-      let personId = await this.personService.findUserId(email);
+      let personId = await this.personService.findByUserId(email);
       if (!personId) {
         new NotFoundException(`Sorry user Id not found`);
       }
