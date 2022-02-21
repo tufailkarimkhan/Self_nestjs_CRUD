@@ -21,8 +21,8 @@ import { PersonService } from './person.service';
 import * as bcrypt from 'bcrypt';
 
 import { AuthService } from 'src/auth/service/auth.service';
-import { JwtAuthGuard } from 'src/auth/guards/jwt.auth.guard';
-import { LocalAuthGuard } from 'src/auth/guards/local-auth';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { LocalAuthGuard } from 'src/auth/guards/local-auth.guard';
 @Controller()
 export class PersonController {
   constructor(
@@ -36,42 +36,23 @@ export class PersonController {
   async register(@Body() { name, age, email, password }: PersonDto) {
     let encryptpass = await bcrypt.hash(password, 12);
     password = encryptpass;
-    return await this.personService.register(name, age, email, password);
+    return await this.authService.encryptPass(name, age, email, password);
   }
 
   /*this route for login */
   @UseGuards(LocalAuthGuard)
   @Post('/login')
-  async getUseId(
-    @Body() { email, password }: LoginDto,
-    @Res({ passthrough: true }) res,
-  ) {
-    let personID = await this.personService.findByUserId(email);
-    if (!personID.email) {
-      throw new BadRequestException({ message: `Invalid Email` });
-    }
-    let comparePass = await bcrypt.compare(password, personID.password);
-
-    if (!comparePass) {
-      throw new BadRequestException({ message: `Invalid Password` });
-    }
+  async authenticateUser(@Body() { email }: LoginDto, @Res() res) {
+    const user = await this.authService.login(email, res);
+    res.status(200).json(user);
     // let jwtToken = await this.authService.login({ id: personID._id });
 
     // console.log(jwtToken);
 
     // res.cookie('jwtCookie', jwtToken, { httpOnly: true });
-    res.status(200).json({ message: `you are Successfully Login 😀` });
+    // res.status(200).json({ message: `you are Successfully Login 😀` });
   }
 
-  /*LogOut route */
-  @UseGuards()
-  @Post('/logout')
-  async logout(@Res({ passthrough: true }) res) {
-    // res.clearCookie('jwtCookie');
-    return {
-      message: `Logout Successfully ✔`,
-    };
-  }
   /*here we are store  product data into database*/
   @UseGuards(JwtAuthGuard)
   @Post('/product')
@@ -122,5 +103,14 @@ export class PersonController {
     } catch (err) {
       console.error(`This error show from bill route ${err}`);
     }
+  }
+  /*LogOut route */
+  @UseGuards()
+  @Post('/logout')
+  async logout(@Res({ passthrough: true }) res) {
+    // res.clearCookie('jwtCookie');
+    return {
+      message: `Logout Successfully ✔`,
+    };
   }
 }

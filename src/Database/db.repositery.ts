@@ -27,7 +27,7 @@ export class DbRepository {
     return userInfo;
   }
   /*here we get the User id */
-  async findUserId(email: string) {
+  async findUserByEmail(email: string) {
     let userId = await this.db
       .collection('person')
       .findOne({ email: email }, { name: 0, age: 0, email: 0, password: 0 });

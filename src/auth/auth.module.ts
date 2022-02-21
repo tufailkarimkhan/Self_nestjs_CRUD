@@ -1,28 +1,25 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
-import { PersonModule } from 'src/Person/person.module';
+import { PassportModule } from '@nestjs/passport';
+import { jwtConstant } from './constants';
 
-import {} from './guards/jwt.auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AuthService } from './service/auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { LocalAuthGuard } from './guards/local-auth';
+import { dbModule } from 'src/Database/db.module';
+import { LocalStrategy } from './strategies/local.strategy';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Module({
   imports: [
-    // JwtModule.registerAsync({
-    //   imports:[PersonModule],
-    //   inject:[PersonService],
-    //   useFactory:async(personService:PersonService)=>({
-    //     secret:
-    //   })
-    // })
+    dbModule,
+    PassportModule,
     JwtModule.register({
-      secret: 'secretkey',
+      secret: jwtConstant.secret,
       signOptions: { expiresIn: '60s' },
     }),
-    PersonModule,
   ],
-  providers: [AuthService, LocalAuthGuard, JwtStrategy],
-  exports: [AuthService, JwtStrategy],
+  providers: [AuthService, LocalStrategy, JwtStrategy],
+  exports: [AuthService],
 })
 export class AuthModule {}

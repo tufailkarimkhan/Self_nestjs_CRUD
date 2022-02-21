@@ -9,9 +9,9 @@ export class PersonService {
     let userInfo = await this.dbRepository.addUser(name, age, email, password);
     return userInfo;
   }
-  /*this funcion return User's Id */
+  /*this funcion return User's data */
   async findByUserId(email: string) {
-    let userId = await this.dbRepository.findUserId(email);
+    let userId = await this.dbRepository.findUserByEmail(email);
     return userId;
   }
   /*This function add product into DB */
