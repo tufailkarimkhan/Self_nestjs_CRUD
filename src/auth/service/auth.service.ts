@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { DbRepository } from 'src/Database/db.repositery';
-import { Res } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 @Injectable()
 export class AuthService {
@@ -27,12 +26,13 @@ export class AuthService {
     return null;
   }
 
-  async login(email: any, res) {
+  async login(email: any,) {
     const payload = { email };
     // return {
     //   access_token: this.jwtService.sign(payload),
     // };
-    const token = this.jwtService.sign(payload) as string;
-    res.cookie('jwtCookie', token, { maxAge: 1000 * 10 });
+    const token = this.jwtService.sign(payload);
+    console.log(token);
+    return token
   }
 }

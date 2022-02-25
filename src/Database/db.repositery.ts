@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { MongoClient, ObjectId, Timestamp } from 'mongodb';
+
 const url = 'mongodb://localhost:27017/nestSelfCrud';
 
 @Injectable()
@@ -19,28 +20,52 @@ export class DbRepository {
       });
   }
   /*this function is use to add person's data\*/
+  
   async addUser(name: string, age: number, email: string, password: string) {
-    const userInfo = await this.db
-      .collection('person')
-      .insertOne({ name, age, email, password });
-    console.log(userInfo);
-    return userInfo;
+    try{ 
+      console.log(`show from person service line 25 ${email}`);
+      
+      let userDataFind= await this.findUserByEmail(email)
+      
+      if(userDataFind){
+        console.log(`here data inside the if section line 34`);
+        return `${userDataFind.email} Already Exits Please Try Another`
+      }
+      else{
+        console.log(`show db.Repository line 40 email add Section ${email}`);
+        const userInfo = await this.db
+        .collection('person')
+        .insertOne({ name, age, email, password });
+        console.log(userInfo);
+        return ` You are Registered Successfully`
+        
+      }
+    } catch(err){
+      console.warn(err);
+    }
   }
   /*here we get the User id */
   async findUserByEmail(email: string) {
     let userId = await this.db
-      .collection('person')
-      .findOne({ email: email }, { name: 0, age: 0, email: 0, password: 0 });
+    .collection('person')
+    .findOne({ email: email });
 
     return userId;
   }
+  
   /*Here we insert product information inside DB*/
   async addProduct(title: string, productName: string, price: number) {
-    let productInfo = await this.db
-      .collection('product')
-      .insertOne({ title, productName, price });
-    return productInfo;
+    await this.db
+    .collection('product')
+    .insertOne({ title, productName, price });
+    return `${productName} add SuccessFully`;
   }
+  /*here find all products */
+    async findAllProducts(){
+     let allProductsData = await this.db.collection('product').find({}).sort({title:1}).toArray()
+     return allProductsData
+      
+    }
   /*Here we get product Id */
   async findProductId(productName: string) {
     let productId = await this.db

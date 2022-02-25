@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   NotFoundException,
   Post,
   Req,
@@ -23,6 +24,7 @@ import * as bcrypt from 'bcrypt';
 import { AuthService } from 'src/auth/service/auth.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { LocalAuthGuard } from 'src/auth/guards/local-auth.guard';
+
 @Controller()
 export class PersonController {
   constructor(
@@ -33,26 +35,22 @@ export class PersonController {
   auth() {}
   /*this route for register*/
   @Post('/register')
-  async register(@Body() { name, age, email, password }: PersonDto) {
-    let encryptpass = await bcrypt.hash(password, 12);
-    password = encryptpass;
-    return await this.authService.encryptPass(name, age, email, password);
+  async register(@Body() { name, age, email, password }: PersonDto,@Res() res) {
+    
+    let userData = await this.authService.encryptPass(name, age, email, password);
+    res.status(200).json(userData)
   }
 
   /*this route for login */
   @UseGuards(LocalAuthGuard)
   @Post('/login')
-  async authenticateUser(@Body() { email }: LoginDto, @Res() res) {
-    const user = await this.authService.login(email, res);
-    res.status(200).json(user);
-    // let jwtToken = await this.authService.login({ id: personID._id });
-
-    // console.log(jwtToken);
-
-    // res.cookie('jwtCookie', jwtToken, { httpOnly: true });
-    // res.status(200).json({ message: `you are Successfully Login 😀` });
+  async login(@Body() { email }: LoginDto, @Res() res) {
+    const token = await this.authService.login(email);
+    res
+      .status(200)
+      .json(token);
   }
-
+  
   /*here we are store  product data into database*/
   @UseGuards(JwtAuthGuard)
   @Post('/product')
@@ -60,28 +58,30 @@ export class PersonController {
     @Body() { title, productName, price }: ProductDto,
     @Req() req,
     @Res() res,
-  ) {
-    try {
-      let data;
+    ) {
+      try {
+       
+        
+        let productInfo = await this.personService.addProduct(
+          title,
+          productName,
+          price,
+          );
 
-      let productInfo = await this.personService.addProduct(
-        title,
-        productName,
-        price,
-      );
-      // try {
-      //   const cookie = req.cookies['jwtCookie'];
-      //   data = await this.jwtService.verifyAsync(cookie);
-      //   console.log(data);
-      // } catch (err) {
-      //   res.status(401).json({ error: 'Please Login for Access' });
-      // }
-      console.log(productInfo);
-      res.status(200).json({ Message: 'Product Added SuccessFully' });
-    } catch (err) {
-      console.error(err);
-    }
+          console.log(productInfo);
+          res.status(200).json(productInfo);
+        } catch (err) {
+          console.error(err);
+        }
+      }
+  /*find All products*/ 
+  @Get('/product')
+  async findAllProducts(){
+    let allProductsData = await this.personService.findAllProducts()
+    console.log(allProductsData);
+    return allProductsData
   }
+
   @Post('/bill')
   async generateBill(@Body() { productName, email }: generateBill, @Res() res) {
     try {
@@ -105,7 +105,7 @@ export class PersonController {
     }
   }
   /*LogOut route */
-  @UseGuards()
+  // @UseGuards()
   @Post('/logout')
   async logout(@Res({ passthrough: true }) res) {
     // res.clearCookie('jwtCookie');
