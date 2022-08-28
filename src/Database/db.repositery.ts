@@ -23,12 +23,11 @@ export class DbRepository {
   
   async addUser(name: string, age: number, email: string, password: string) {
     try{ 
-      console.log(`show from person service line 25 ${email}`);
+     
       
       let userDataFind= await this.findUserByEmail(email)
       
       if(userDataFind){
-        console.log(`here data inside the if section line 34`);
         return `${userDataFind.email} Already Exits Please Try Another`
       }
       else{

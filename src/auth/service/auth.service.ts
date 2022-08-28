@@ -26,13 +26,13 @@ export class AuthService {
     return null;
   }
 
-  async login(email: any,) {
+  async login(email: any,res) {
     const payload = { email };
     // return {
     //   access_token: this.jwtService.sign(payload),
     // };
     const token = this.jwtService.sign(payload);
-    console.log(token);
-    return token
+    res.status(200).cookie('jwtToken',token,{maxAge:1000*60*60}).json({message:'done'})
+    
   }
 }

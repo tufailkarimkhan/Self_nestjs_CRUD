@@ -1,4 +1,4 @@
-import { IsInt, IsNotEmpty, Min, Max, IsEmail } from 'class-validator';
+import { IsInt, IsNotEmpty, Min, Max, IsEmail, IsString } from 'class-validator';
 
 export class PersonDto {
   @IsNotEmpty({ message: `Please fill name field` })
@@ -20,6 +20,7 @@ export class LoginDto {
   @IsEmail()
   email: string;
   @IsNotEmpty({ message: `Please fill password field` })
+  @IsString()
   password: string;
 }
 

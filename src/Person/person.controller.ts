@@ -31,8 +31,8 @@ export class PersonController {
     public personService: PersonService,
     private authService: AuthService, // private jwtService: JwtService,
   ) {}
-  /*Here i defined authentication function */
-  auth() {}
+  // /*Here i defined authentication function */
+  // auth() {}
   /*this route for register*/
   @Post('/register')
   async register(@Body() { name, age, email, password }: PersonDto,@Res() res) {
@@ -45,10 +45,7 @@ export class PersonController {
   @UseGuards(LocalAuthGuard)
   @Post('/login')
   async login(@Body() { email }: LoginDto, @Res() res) {
-    const token = await this.authService.login(email);
-    res
-      .status(200)
-      .json(token);
+    await this.authService.login(email,res); 
   }
   
   /*here we are store  product data into database*/
